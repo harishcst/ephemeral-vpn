@@ -10,7 +10,7 @@ if [[ -z "$DO_API_TOKEN" ]]; then
 fi
 
 # Ensure SSH key path is set
-SSH_KEY_PATH="${SSH_KEY_PATH:-~/.ssh/id_rsa.pub}"
+SSH_KEY_PATH="${SSH_KEY_PATH:-$HOME/.ssh/id_rsa.pub}"
 
 # Function to get SSH key ID from fingerprint
 function get_ssh_key_id() {
@@ -40,6 +40,31 @@ function get_local_ssh_key_fingerprint() {
     ssh-keygen -E md5 -lf "$key_path" | awk '{print $2}' | sed 's/^MD5://'
 }
 
+# Function to add the SSH key to DigitalOcean if not present
+function add_ssh_key_to_do() {
+    local key_name="$1"
+    local key_path="$2"
+
+    # Get the SSH key contents
+    local ssh_key_content
+    ssh_key_content=$(cat "$key_path")
+
+    local response
+    response=$(curl -s -X POST "https://api.digitalocean.com/v2/account/keys" \
+        -H "Authorization: Bearer $DO_API_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d '{
+            "name": "'"$key_name"'",
+            "public_key": "'"$ssh_key_content"'"
+        }')
+
+    if [[ $? -ne 0 ]]; then
+        echo "Error: Failed to add SSH key to DigitalOcean."
+        exit 1
+    fi
+
+    echo "SSH key added to DigitalOcean with name: $key_name"
+}
 
 # Function to create a new droplet
 function create_droplet() {
@@ -51,7 +76,7 @@ function create_droplet() {
         region="nyc1"  # Default region
     fi
 
-      # Validate input parameters
+    # Validate input parameters
     if [[ -z "$droplet_name" ]]; then
         echo "Error: Droplet name must be provided. Optionally you can pass the region slug where you want to spin the VM"
         echo "Usage: create_vpn <droplet_name> <region-slug>"
@@ -60,21 +85,23 @@ function create_droplet() {
 
     echo "Creating a new droplet in region $region..."
 
-    # Get the local SSH key path from the user
-    read -p "Enter the path to your SSH public key (default: ~/.ssh/id_rsa.pub): " ssh_key_path
-    ssh_key_path="${ssh_key_path:-$HOME/.ssh/id_rsa.pub}"
-
     # Get the local SSH key fingerprint
     local key_fingerprint
-    key_fingerprint=$(get_local_ssh_key_fingerprint "$ssh_key_path")
+    key_fingerprint=$(get_local_ssh_key_fingerprint "$SSH_KEY_PATH")
 
     # Get SSH key ID from fingerprint
     local ssh_key_id
     ssh_key_id=$(get_ssh_key_id "$key_fingerprint")
 
     if [[ -z "$ssh_key_id" ]]; then
-        echo "Error: SSH key ID not found."
-        exit 1
+        echo "SSH key not found on DigitalOcean. Adding the SSH key..."
+        add_ssh_key_to_do "$(hostname)-ssh-key" "$SSH_KEY_PATH"
+        ssh_key_id=$(get_ssh_key_id "$key_fingerprint")
+
+        if [[ -z "$ssh_key_id" ]]; then
+            echo "Error: Failed to retrieve the SSH key ID after adding the key."
+            exit 1
+        fi
     fi
 
     echo "Using SSH key with ID: $ssh_key_id"
@@ -91,7 +118,7 @@ function create_droplet() {
             "image": "ubuntu-24-04-x64",
             "ssh_keys": ['"$ssh_key_id"'],
             "backup": false,
-            "ipv6" : true,
+            "ipv6": true,
             "tags": ["'"$TAG"'"]
         }')
 
@@ -166,15 +193,12 @@ EOF
             sleep 30
             ((attempt++))
         fi
-
-
     done
 
     if [[ $attempt -gt $max_attempts ]]; then
         echo "Error: Failed to install OpenVPN after $max_attempts attempts."
         exit 1
     fi
-
 
     # Fetch the default auto generated vpn profile after installing openvpn
     echo "Fetching .ovpn file for user $profile_name"
@@ -184,9 +208,7 @@ EOF
         echo "Error: Failed to download .ovpn file for user $profile_name."
         exit 1
     fi
-
 }
-
 
 # Function to create a new VPN user
 function create_vpn_user() {
@@ -403,7 +425,7 @@ function import_ovpn_profile() {
     if [[ ! -f "$ovpn_file" ]]; then
         # Get the directory where this script is located
         local script_dir="$(dirname "$0")"
-        
+
         # Check if the file exists in the script directory
         if [[ -f "$script_dir/$ovpn_file" ]]; then
             ovpn_file="$script_dir/$ovpn_file"
@@ -454,6 +476,5 @@ function main() {
     esac
 }
 
-# Call the main function with all script arguments
+# Call the main function with all script
 main "$@"
-
