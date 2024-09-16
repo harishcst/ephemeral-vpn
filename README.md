@@ -76,7 +76,7 @@ Example:
 ./vpn_manager.sh create_vpn personal-vpn lon1
 ```
 
-This will create a VPN server in London (`lon1`). It also generates a default profile in the format <droplet_name-region>.ovpn. 
+First checks if your ssh key is available in DigitalOcean infra. If not, it adds your ssh key in DO through the API. It then spins up a new DigitalOcean Droplet in the London (`lon1`) region, attaches your ssh key, installs OpenVPN on it, and gets it ready for secure connections. It also generates a default profile in the format <droplet_name-region>.ovpn. and downloads it to your local.
 
 ### 2. List Available Regions
 
