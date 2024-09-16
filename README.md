@@ -3,7 +3,7 @@
 
 ## Overview
 
-This project provides a **dynamic solution** for creating and managing ephemeral VPN servers using **DigitalOcean**. The VPN Manager script automates the process of provisioning secure OpenVPN servers, adding and removing users, and tearing down the server when it's no longer needed.
+This project is part of the Devopsideas article titled [Building an Ephemeral VPN Solution](https://devopsideas.com/building-an-ephemeral-vpn-solution-a-devops-and-sre-approach-for-personal-use/). It provides a **dynamic solution** for creating and managing ephemeral VPN servers using **DigitalOcean**. The VPN Manager script automates the process of provisioning secure OpenVPN servers, adding and removing users, and tearing down the server when it's no longer needed.
 
 This solution is designed to be lightweight and simple to use, perfect for personal VPN needs, such as when traveling or working from public places. The script uses the **DigitalOcean API** to handle infrastructure, making it easy to deploy VPN servers in different regions around the world.
 
