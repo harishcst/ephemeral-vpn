@@ -168,7 +168,7 @@ function create_droplet() {
     local ssh_command='bash -s'
     local install_script='https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh'
     local ssh_options='-o StrictHostKeyChecking=no -o ConnectTimeout=30'
-    local profile_name="$1-$2"
+    local profile_name="$1-$region"
 
     while [[ $attempt -le $max_attempts ]]; do
         echo "Attempting to install OpenVPN (attempt $attempt of $max_attempts)..."
@@ -202,7 +202,8 @@ EOF
 
     # Fetch the default auto generated vpn profile after installing openvpn
     echo "Fetching .ovpn file for user $profile_name"
-    scp root@"$droplet_ip":/root/$profile_name.ovpn ./
+    mkdir -p ovpn_files
+    scp root@"$droplet_ip":/root/$profile_name.ovpn ./ovpn_files/
 
     if [[ $? -ne 0 ]]; then
         echo "Error: Failed to download .ovpn file for user $profile_name."
