@@ -32,7 +32,7 @@ Clone the repository to your local machine:
 
 ```bash
 git clone https://github.com/yourusername/vpn-manager.git
-cd vpn-manager
+cd ephemeral-vpn
 ```
 
 Ensure that the script is executable:
