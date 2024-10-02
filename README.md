@@ -31,7 +31,7 @@ Before using the script, ensure that you have the following:
 Clone the repository to your local machine:
 
 ```bash
-git clone https://github.com/yourusername/vpn-manager.git
+git clone git@github.com:devopsideas/ephemeral-vpn.git
 cd ephemeral-vpn
 ```
 
