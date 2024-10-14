@@ -121,6 +121,29 @@ function create_droplet() {
             "ipv6": true,
             "tags": ["'"$TAG"'"]
         }')
+    
+    # Check if the API call was successful
+    if [[ $? -ne 0 ]]; then
+        echo "Error: Failed to create droplet."
+        exit 1
+    fi
+
+    # Check for error message in response
+    error_message=$(echo "$response" | jq -r '.message // empty')
+    if [[ -n "$error_message" ]]; then
+        echo "Error from DigitalOcean API: $error_message"
+        echo "Full response: $response"
+        exit 1
+    fi
+
+    # Extract the droplet ID
+    droplet_id=$(echo "$response" | jq -r '.droplet.id')
+
+    if [[ -z "$droplet_id" ]]; then
+        echo "Error: Failed to retrieve droplet ID."
+        echo "Full response: $response"
+        exit 1
+    fi
 
     if [[ $? -ne 0 ]]; then
         echo "Error: Failed to create droplet."
