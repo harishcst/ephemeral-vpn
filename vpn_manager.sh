@@ -145,20 +145,8 @@ function create_droplet() {
         exit 1
     fi
 
-    if [[ $? -ne 0 ]]; then
-        echo "Error: Failed to create droplet."
-        exit 1
-    fi
-
-    local droplet_id
-    droplet_id=$(echo "$response" | jq -r '.droplet.id')
-
-    if [[ -z "$droplet_id" ]]; then
-        echo "Error: Failed to retrieve droplet ID."
-        exit 1
-    fi
-
     echo "Droplet created with ID: $droplet_id"
+
 
     # Wait for droplet to become active and assign IP
     local droplet_ip
